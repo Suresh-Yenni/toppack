@@ -4,32 +4,30 @@ use Slim\Http\Request;
 use Slim\Http\Response;
 require __DIR__ . '/services/github.php';
 
-// Routes
-
-$app->get('/hello/[{name}]', function (Request $request, Response $response, array $args) {
-    // Sample log message
-    $this->logger->info("Slim-Skeleton '/' route");
-
-    // Render index view
-    return $this->renderer->render($response, 'index.phtml', $args);
-});
+// Routes acting as API's
 
 $app->get('/dbs', function (Request $request, Response $response) {
     $result = "Available databases:<br>";
     $dbs = $this->db->query("show databases");
     $result = ["data" => $dbs->fetchAll()];
     $this->logger->info($result);
-    return $response->withJson($result);
+    return $response->$result;
 });
 
-$app->post('/search_repos', function (Request $request, Response $response) {
-    $params = $request->getParams();
-    if(array_key_exists("query", $params)) {
-        $result = Github::search_repo($params["query"], "js");
+$app->get('/search_repos', function (Request $request, Response $response) {
+    $query = $request->getQueryParam("query");
+    if(!empty($query)) {
+        $result = Github::search_repo($query, "js");
     } else {
         $result = ["error" => "Please provide search query."];
     }
     return $response->withJson($result);
+});
+
+$app->get('/imported_repo_ids', function (Request $request, Response $response) {
+    $query = "select id from imported_repos";
+    $repo_ids = $this->db->query($query);
+    return $response->withJson(["data" => $repo_ids->fetchAll()]);
 });
 
 $app->post('/import', function(Request $request, Response $response) {
@@ -50,7 +48,7 @@ $app->post('/import', function(Request $request, Response $response) {
         // inserting into packages
         $sub_query = str_repeat("(?)", sizeof($packages));
         $sub_query = str_replace(")(", "),(", $sub_query);
-        $query = "insert into packages(name) values $sub_query";
+        $query = "insert ignore into packages(name) values $sub_query";
         $this->logger->info("Query::::: $query");
         $sql = $this->db->prepare($query);
         $sql->execute($packages);
@@ -88,7 +86,7 @@ $app->get('/top_packages', function(Request $request, Response $response) {
     return $response->withJson(["data" => $top_packages->fetchAll()]);
 });
 
-$app->post('/search_packages', function(Request $request, Response $response) {
+$app->get('/search_packages', function(Request $request, Response $response) {
     $params = $request->getParams();
     if(array_key_exists("query", $params)) {
         $search_term = "{$params["query"]}%";
@@ -101,4 +99,20 @@ $app->post('/search_packages', function(Request $request, Response $response) {
         $result = ["error" => "Please provide search query."];
     }
     return $response->withJson($result);
+});
+
+// Routes used for rendering content
+
+$app->get('/hello/[{name}]', function (Request $request, Response $response, array $args) {
+    // Sample log message
+    $this->logger->info("Slim-Skeleton '/' route");
+
+    // Render index view
+    return $this->renderer->render($response, 'index.phtml', $args);
+});
+
+$app->get('/home', function(Request $request, Response $response) {
+    $this->logger->info("Rendering home");
+
+    return $this->renderer->render($response, 'toppack.html');
 });

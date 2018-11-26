@@ -1,0 +1,52 @@
+<!doctype html>
+<html ng-app="toppack">
+    <head>
+        <title>TopPack</title>
+    </head>
+    <body ng-controller="ToppackCtrl">
+        <header style="background-color: #F1F1F1; text-align: center; padding: 3px;">
+            <h1>TopPack</h1>
+            <table align="center" style="padding: 5px; font-size: 20px;">
+                <tr><td ng-repeat="tab in tabs" width="400">
+                    <a style="text-decoration: none; color: black;" href="#" ng-click="setCurrentTab(tab)">{{tab.name}}</a>
+                </td></tr>
+            </table>
+        </header>
+
+        <div align="center" ng-if="isImportedReposFetched()">
+            <h1>Search {{currentTab.name}}</h1>
+            <input type="text" ng-model="searchQuery" ng-change="onSearchQueryChange(searchQuery)" placeholder="Enter search query" style="font-size: 18px; padding: 2px 4px; width: 300px; height: 30px"/>
+            <p style="font-size:17px;">{{currentTab.name}} search result for '{{searchQuery}}' are.. </p>
+
+            <table style="padding: 5px; font-size: 16px;" ng-if="isSearchQueryResultNotEmpty()">
+                <tr ng-if="isRepositoryTab()">
+                    <th>Name</th><th>Owner</th><th>Stars</th><th>Action</th>
+                </tr>
+                <tr ng-if="isRepositoryTab()" ng-repeat="result in searchQueryResult" align="center">
+                    <td  width="200">{{result.name}}</td>
+                    <td  width="200">{{result.owner.login}}</td>
+                    <td  width="200">{{result.stargazers_count}}</td>
+                    <td  width="200" ng-switch on="isRepoImported(result.id)">
+                        <button ng-switch-when=true disabled>Imported</button>
+                        <button ng-switch-when=false ng-click="importRepo(result.id, result.owner.login, result.name, result.stargazers_count)">Import</button>
+                    </td>
+                </tr>
+                <tr ng-if="isTopPackagesTab()" align="left">
+                    <th>Name</th>
+                </tr>
+                <tr ng-if="isTopPackagesTab()" ng-repeat="result in searchQueryResult" align="left">
+                    <td  width="200">{{result.name}}</td>
+                </tr>
+
+            </table>
+        </div>
+
+        <div align="center" ng-if="!isImportedReposFetched()">
+            <br>
+            <p>Please wait while intial data is fetched...</p>
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.5/angular.min.js"></script>
+        <script src="javascripts/toppack.js"></script>
+    </body>
+</html>

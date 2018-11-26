@@ -9,7 +9,7 @@ class Github {
     static function search_repo($query, $language) {
         $client = new Client(['base_uri' => Github::$BASE_URL]);
         $response = $client->get("search/repositories?q=$query+language:$language");
-        echo $query;
+
         if($response->getStatusCode() != 200) {
             return ["error" => "Something went wrong! Please try again"];
         } else {
@@ -25,7 +25,14 @@ class Github {
             return ["error" => "package.json {$decoded_response["message"]}"];
         } else {
             $package_json = json_decode(base64_decode($decoded_response["content"]), true);
-            return ["data" => array_keys($package_json)];
+            $packages = [];
+            if(array_key_exists("devDependencies", $package_json)) {
+                $packages = array_merge(array_keys($package_json["devDependencies"]), $packages);
+            }
+            if(array_key_exists("dependencies", $package_json)) {
+                $packages = array_merge(array_keys($package_json["dependencies"]), $packages);
+            }
+            return ["data" => $packages];
         }
     }
 
