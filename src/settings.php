@@ -18,7 +18,7 @@ return [
 
         // db setting
         'db' => [
-          'host' => 'localhost',
+          'host' => 'mysql',
           'user' => 'suresh',
           'pass' => 'root',
           'dbname' => 'toppack'
